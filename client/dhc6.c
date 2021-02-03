@@ -4833,6 +4833,7 @@ dhc6_merge_lease(struct dhc6_lease *src, struct dhc6_lease *dst)
 static void
 start_bound(struct client_state *client)
 {
+	isc_boolean_t old_required = ISC_TRUE;
 	struct dhc6_ia *ia, *oldia;
 	struct dhc6_addr *addr, *oldaddr;
 	struct dhc6_lease *lease, *old;
@@ -4856,6 +4857,7 @@ start_bound(struct client_state *client)
 	switch (client->state) {
 	      case S_SELECTING:
 	      case S_REBOOTING: /* Pretend we got bound. */
+	        old_required = ISC_FALSE;
 		reason = "BOUND6";
 		break;
 
@@ -4915,7 +4917,7 @@ start_bound(struct client_state *client)
 			/* Shell out to setup the new binding. */
 			script_init(client, reason, NULL);
 
-			if (old != NULL)
+			if (old != NULL && old_required)
 				dhc6_marshall_values("old_", client, old,
 						     oldia, oldaddr);
 			dhc6_marshall_values("new_", client, lease, ia, addr);
@@ -4943,7 +4945,7 @@ start_bound(struct client_state *client)
 		if (ia->addrs == NULL) {
 			script_init(client, reason, NULL);
 
-			if (old != NULL)
+			if (old != NULL && old_required)
 				dhc6_marshall_values("old_", client, old,
 						     oldia,
 						     oldia != NULL ?
@@ -4961,7 +4963,7 @@ start_bound(struct client_state *client)
 	if (lease->bindings == NULL) {
 		script_init(client, reason, NULL);
 
-		if (old != NULL)
+		if (old != NULL && old_required)
 			dhc6_marshall_values("old_", client, old,
 					     old->bindings,
 					     (old->bindings != NULL) ?

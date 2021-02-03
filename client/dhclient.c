@@ -1505,6 +1505,8 @@ void dhcpack (packet)
 void bind_lease (client)
 	struct client_state *client;
 {
+	isc_boolean_t old_required = client->state == S_RENEWING ||
+	                             client->state == S_REBINDING;
 	struct timeval tv;
 
 	/* Remember the medium. */
@@ -1516,7 +1518,7 @@ void bind_lease (client)
 			      (client->state == S_REBOOTING ? "REBOOT" :
 			       "REBIND"))),
 		    client->new->medium);
-	if (client->active && client->state != S_REBOOTING)
+	if (client->active && old_required)
 		script_write_params(client, "old_", client->active);
 	script_write_params(client, "new_", client->new);
 	script_write_requested(client);
